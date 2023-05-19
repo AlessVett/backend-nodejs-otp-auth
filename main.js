@@ -6,19 +6,20 @@ const io = new Server({
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
-      }
+    }
 });
 const otpsData = require('./data/otps.data');
+const optsModel = require('./data/opts.model');
 
-app.get('/:username/otp/:token', (req, res, next) => {
-    let result = otpsData.checkOtp(req.params.token);
+app.get('/:user/otp/:token', (req, res, next) => {
+    optsModel.checkString(req.params.user, req.params.token, (result) => {
+        if (result.status) {
+            io.to(result.content).emit('authenticated');
+        }
 
-    if (result) {
-        io.to(result).emit('authenticated');
-    }
-
-    return res.status(200).json({
-        status: true
+        return res.status(200).json({
+            status: true
+        });
     });
 });
 
@@ -26,7 +27,9 @@ io.on('connection', (socket) => {
     socket.emit('accepted');
 
     socket.on('otp', () => {
-        socket.emit('otp', { token: otpsData.newOtp(socket.id) });
+        optsModel.newString(socket.id, (result) => {
+            socket.emit('otp', { token: result.status ? result.token : null });
+        });
     });
 });
 
