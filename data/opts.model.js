@@ -20,10 +20,10 @@ module.exports = {
             });
         });
     },
-    checkString: (user, token, callback) => {
+    checkString: (token, callback) => {
         // check if `user` in db1.users
 
-        db1.execute("SELECT `socketId`, `timestamp` FROM `strings` WHERE `token` = :token", {
+        db1.execute("SELECT `socketId`, `timestamp`, `confirmed` FROM `strings` WHERE `token` = :token", {
             token: token
         }, (err, results, fields) => {
            if (err) {
@@ -32,37 +32,45 @@ module.exports = {
                    content: null
                });
            } else {
-               const { socketId, timestamp } = results[0];
+               const { socketId, timestamp, confirmed } = results[0];
                const current_timestamp = Date.now();
 
-               if (parseInt(String((new Date(current_timestamp) - new Date(timestamp)) / 1000), 10) <= 120) {
-                   db1.execute("UPDATE `strings` SET `user` = :user, `confirmed` = :accepted WHERE `socketId` = :socketId", {
-                       user: user,
-                       accepted: new Date(current_timestamp),
-                       socketId: socketId
-                   }, (err, results, fields) => {
-                       if (err) {
-                           callback({
-                               status: false,
-                               content: null
-                           });
-                       } else {
-                           callback({
-                               status: true,
-                               content: socketId
-                           });
-                       }
+               if (parseInt(String((new Date(current_timestamp) - new Date(timestamp)) / 1000), 10) <= 120 && confirmed) {
+                   // db1.execute("UPDATE `strings` SET `user` = :user, `confirmed` = :accepted WHERE `socketId` = :socketId", {
+                   //     user: 'test',
+                   //     accepted: new Date(current_timestamp),
+                   //     socketId: socketId
+                   // }, (err, results, fields) => {
+                   //     if (err) {
+                   //         callback({
+                   //             status: false,
+                   //             content: null
+                   //         });
+                   //     } else {
+                   //         callback({
+                   //             status: true,
+                   //             content: socketId
+                   //         });
+                   //     }
+                   // });
+                   callback({
+                       status: true,
+                       content: null
                    });
                } else {
-                   db1.execute("UPDATE `strings` SET `user` = :user WHERE `socketId` = :socketId", {
-                       user: user,
-                       socketId: socketId
-                   }, (err, results, fields) => {
-                       callback({
-                           status: false,
-                           content: null
-                       });
-                   });
+                    // db1.execute("UPDATE `strings` SET `user` = :user WHERE `socketId` = :socketId", {
+                    //     user: 'test',
+                    //     socketId: socketId
+                    // }, (err, results, fields) => {
+                    //     callback({
+                    //         status: false,
+                    //         content: null
+                    //     });
+                    // });
+                    callback({
+                        status: false,
+                        content: null
+                    });
                }
            }
         });
